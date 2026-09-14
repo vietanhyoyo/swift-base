@@ -28,6 +28,7 @@ struct StatisticsView: View {
             }
             .appScreenBackground()
             .navigationTitle("Thống kê")
+            .navigationBarTitleDisplayMode(.inline)
             .task { await viewModel.load() }
             .refreshable { await viewModel.load() }
         }

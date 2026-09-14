@@ -32,6 +32,7 @@ struct TransactionListView: View {
             }
             .appScreenBackground()
             .navigationTitle("Giao dịch")
+            .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $viewModel.query, prompt: "Ghi chú hoặc danh mục")
             .toolbar {
                 ToolbarItemGroup(placement: .topBarTrailing) {

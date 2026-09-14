@@ -12,6 +12,7 @@ struct SettingsView: View {
             }
             .appFormStyle()
             .navigationTitle("Cài đặt")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 

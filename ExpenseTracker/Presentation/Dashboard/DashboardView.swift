@@ -41,6 +41,7 @@ struct DashboardView: View {
             }
             .appScreenBackground()
             .navigationTitle("Xin chào 👋")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     addTransactionButton

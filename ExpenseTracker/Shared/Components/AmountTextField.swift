@@ -10,11 +10,11 @@ struct AmountTextField: View {
     var body: some View {
         VStack(spacing: AppSpacing.medium) {
             HStack(spacing: AppSpacing.xSmall) {
-                Image(systemName: "banknote.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(accentColor)
-                    .frame(width: 30, height: 30)
-                    .background(accentColor.opacity(0.11), in: Circle())
+                AppIconBadge(
+                    icon: "banknote.fill",
+                    color: accentColor,
+                    size: 30
+                )
 
                 Text("Số tiền")
                     .font(AppTypography.cardTitle)

@@ -31,7 +31,12 @@ private struct BudgetProgressRow: View {
     var body: some View {
         VStack(spacing: AppSpacing.xSmall) {
             HStack(spacing: AppSpacing.xSmall) {
-                Label(progress.category.name, systemImage: progress.category.icon)
+                AppIconBadge(
+                    icon: progress.category.icon,
+                    color: progress.category.color,
+                    size: 34
+                )
+                Text(progress.category.name)
                     .font(AppTypography.cardTitle)
                 Spacer()
                 Text("\(Int(progress.ratio.doubleValue * 100))%")

@@ -14,7 +14,7 @@ struct BudgetRow: View {
     var body: some View {
         VStack(spacing: AppSpacing.small) {
             HStack(spacing: AppSpacing.small) {
-                AppIconBadge(icon: progress.category.icon, color: color, size: 38)
+                AppIconBadge(icon: progress.category.icon, color: progress.category.color, size: 38)
                 Text(progress.category.name)
                     .font(AppTypography.bodyEmphasis)
                 Spacer()

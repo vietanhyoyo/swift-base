@@ -27,7 +27,7 @@ struct DashboardSpendingCard: View {
         return VStack(spacing: AppSpacing.small) {
             ForEach(Array(visibleItems.enumerated()), id: \.element.id) { index, item in
                 HStack(spacing: AppSpacing.small) {
-                    AppIconBadge(icon: item.category.icon, color: AppTheme.teal, size: 38)
+                    AppIconBadge(icon: item.category.icon, color: item.category.color, size: 38)
                     Text(item.category.name)
                         .font(AppTypography.body)
                     Spacer()

@@ -5,8 +5,12 @@ struct TransactionRow: View {
     let category: ExpenseCategory?
     let account: Account?
 
-    private var accentColor: Color {
+    private var amountColor: Color {
         transaction.type == .income ? AppTheme.teal : AppTheme.coral
+    }
+
+    private var iconColor: Color {
+        category?.color ?? amountColor
     }
 
     private var title: String {
@@ -20,7 +24,7 @@ struct TransactionRow: View {
         HStack(spacing: AppSpacing.small) {
             AppIconBadge(
                 icon: category?.icon ?? "questionmark",
-                color: accentColor
+                color: iconColor
             )
             VStack(alignment: .leading, spacing: AppSpacing.xxxSmall) {
                 Text(title)
@@ -36,7 +40,7 @@ struct TransactionRow: View {
             VStack(alignment: .trailing, spacing: AppSpacing.xxxSmall) {
                 Text(signedAmount)
                     .font(AppTypography.cardTitle)
-                    .foregroundStyle(accentColor)
+                    .foregroundStyle(amountColor)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
                 Text(AppFormatters.shortDate.string(from: transaction.date))

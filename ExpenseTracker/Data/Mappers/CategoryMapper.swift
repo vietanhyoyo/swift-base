@@ -7,7 +7,8 @@ enum CategoryMapper {
             id: entity.id,
             name: entity.name,
             icon: entity.icon,
-            type: type
+            type: type,
+            colorHex: entity.colorHex
         )
     }
 
@@ -16,7 +17,8 @@ enum CategoryMapper {
             id: category.id,
             name: category.name,
             icon: category.icon,
-            type: category.type.rawValue
+            type: category.type.rawValue,
+            colorHex: category.colorHex
         )
     }
 
@@ -24,5 +26,6 @@ enum CategoryMapper {
         entity.name = category.name
         entity.icon = category.icon
         entity.type = category.type.rawValue
+        entity.colorHex = category.colorHex
     }
 }

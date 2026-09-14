@@ -3,6 +3,23 @@ import XCTest
 
 @MainActor
 final class PersistenceTests: XCTestCase {
+    func testCategoryCustomColorRoundTrip() async throws {
+        let container = try AppContainer(inMemory: true)
+        let category = ExpenseCategory(
+            id: UUID(),
+            name: "Du lịch",
+            icon: "airplane",
+            type: .expense,
+            colorHex: "#7C3AED"
+        )
+
+        try await container.categoryUseCases.save(category, isEditing: false)
+
+        let categories = try await container.categoryUseCases.getAll()
+        let stored = try XCTUnwrap(categories.first { $0.id == category.id })
+        XCTAssertEqual(stored.colorHex, "#7C3AED")
+    }
+
     func testBootstrapIsIdempotent() async throws {
         let container = try AppContainer(inMemory: true)
         await container.bootstrap()

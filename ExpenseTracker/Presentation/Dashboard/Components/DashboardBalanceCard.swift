@@ -56,14 +56,13 @@ struct DashboardBalanceCard: View {
                     .lineLimit(1)
             }
             Spacer(minLength: AppSpacing.small)
-            Image(systemName: "waveform.path.ecg")
-                .font(.title2.weight(.medium))
-                .foregroundStyle(.white.opacity(0.72))
-                .frame(width: 44, height: 44)
-                .background(
-                    .white.opacity(0.11),
-                    in: RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                )
+            AppIconBadge(
+                icon: "waveform.path.ecg",
+                color: .white.opacity(0.72),
+                size: 44,
+                backgroundColor: .white.opacity(0.11),
+                iconScale: 0.5
+            )
         }
     }
 }
@@ -76,11 +75,12 @@ private struct SummaryMetric: View {
 
     var body: some View {
         HStack(spacing: AppSpacing.xSmall) {
-            Image(systemName: icon)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(color)
-                .frame(width: 28, height: 28)
-                .background(.white.opacity(0.1), in: Circle())
+            AppIconBadge(
+                icon: icon,
+                color: color,
+                size: 28,
+                backgroundColor: .white.opacity(0.1)
+            )
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(AppTypography.caption)

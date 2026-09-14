@@ -41,7 +41,7 @@ struct CategoriesView: View {
             HStack(spacing: AppSpacing.small) {
                 AppIconBadge(
                     icon: category.icon,
-                    color: category.type == .income ? AppTheme.teal : AppTheme.coral,
+                    color: category.color,
                     size: 38
                 )
                 Text(category.name)

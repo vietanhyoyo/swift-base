@@ -25,13 +25,15 @@ final class CategoriesViewModel {
         id: UUID? = nil,
         name: String,
         icon: String,
-        type: TransactionType
+        type: TransactionType,
+        colorHex: String? = nil
     ) async -> Bool {
         let category = ExpenseCategory(
             id: id ?? UUID(),
             name: name,
             icon: icon,
-            type: type
+            type: type,
+            colorHex: colorHex
         )
 
         do {

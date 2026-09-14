@@ -38,15 +38,8 @@ struct MonthSelector: View {
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Image(systemName: icon)
-                .font(.subheadline.weight(.bold))
-                .frame(width: 38, height: 38)
-                .background(
-                    AppTheme.teal.opacity(0.11),
-                    in: RoundedRectangle(cornerRadius: AppRadius.small, style: .continuous)
-                )
+            AppIconBadge(icon: icon, color: AppTheme.teal, size: 38)
         }
-        .foregroundStyle(AppTheme.teal)
         .accessibilityLabel(label)
     }
 }

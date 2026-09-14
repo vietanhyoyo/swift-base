@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum AppTheme {
     static let teal = Color(red: 0, green: 146 / 255, blue: 184 / 255)
@@ -18,4 +19,46 @@ enum AppTheme {
         startPoint: .topLeading,
         endPoint: .bottomTrailing
     )
+}
+
+extension Color {
+    init(hex: String) {
+        let value = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var rgb: UInt64 = 0
+
+        guard value.count == 6, Scanner(string: value).scanHexInt64(&rgb) else {
+            self = .gray
+            return
+        }
+
+        self.init(
+            red: Double((rgb >> 16) & 0xFF) / 255,
+            green: Double((rgb >> 8) & 0xFF) / 255,
+            blue: Double(rgb & 0xFF) / 255
+        )
+    }
+
+    var hexRGB: String {
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+
+        guard UIColor(self).getRed(&red, green: &green, blue: &blue, alpha: &alpha) else {
+            return "#808080"
+        }
+
+        return String(
+            format: "#%02X%02X%02X",
+            Int(round(red * 255)),
+            Int(round(green * 255)),
+            Int(round(blue * 255))
+        )
+    }
+}
+
+extension ExpenseCategory {
+    var color: Color {
+        Color(hex: colorHex)
+    }
 }

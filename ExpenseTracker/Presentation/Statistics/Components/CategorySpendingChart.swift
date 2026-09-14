@@ -4,14 +4,13 @@ import SwiftUI
 struct CategorySpendingChart: View {
     let items: [CategorySpending]
 
-    private let colors: [Color] = [
-        AppTheme.teal,
-        AppTheme.violet,
-        AppTheme.coral,
-        AppTheme.gold,
-        .blue,
-        .mint
-    ]
+    private var categoryNames: [String] {
+        items.map(\.category.name)
+    }
+
+    private var colors: [Color] {
+        items.map(\.category.color)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppSpacing.large) {
@@ -28,7 +27,7 @@ struct CategorySpendingChart: View {
                 .foregroundStyle(by: .value("Danh mục", item.category.name))
                 .cornerRadius(5)
             }
-            .chartForegroundStyleScale(range: colors)
+            .chartForegroundStyleScale(domain: categoryNames, range: colors)
             .chartLegend(
                 position: .bottom,
                 alignment: .leading,
@@ -44,11 +43,11 @@ struct CategorySpendingChart: View {
 
     private var categoryRows: some View {
         VStack(spacing: AppSpacing.small) {
-            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+            ForEach(items) { item in
                 HStack(spacing: AppSpacing.small) {
                     AppIconBadge(
                         icon: item.category.icon,
-                        color: colors[index % colors.count],
+                        color: item.category.color,
                         size: 36
                     )
                     Text(item.category.name)

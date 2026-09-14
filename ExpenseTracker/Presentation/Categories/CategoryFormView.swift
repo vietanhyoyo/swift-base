@@ -7,6 +7,7 @@ struct CategoryFormView: View {
     @State private var name: String
     @State private var icon: String
     @State private var type: TransactionType
+    @State private var selectedColor: Color
     @Environment(\.dismiss) private var dismiss
 
     private let icons = [
@@ -21,12 +22,17 @@ struct CategoryFormView: View {
         _name = State(initialValue: category?.name ?? "")
         _icon = State(initialValue: category?.icon ?? "star.fill")
         _type = State(initialValue: category?.type ?? .expense)
+        _selectedColor = State(
+            initialValue: category?.color
+                ?? Color(hex: ExpenseCategory.defaultColorHex(for: .expense))
+        )
     }
 
     var body: some View {
         NavigationStack {
             Form {
                 detailsSection
+                colorSection
                 iconSection
             }
             .appFormStyle()
@@ -53,7 +59,21 @@ struct CategoryFormView: View {
                 }
             }
             .pickerStyle(.segmented)
+            .onChange(of: type) { _, newType in
+                guard category == nil else { return }
+                selectedColor = Color(hex: ExpenseCategory.defaultColorHex(for: newType))
+            }
             TextField("Tên danh mục", text: $name)
+        }
+    }
+
+    private var colorSection: some View {
+        Section("Màu sắc") {
+            ColorPicker(
+                "Màu danh mục",
+                selection: $selectedColor,
+                supportsOpacity: false
+            )
         }
     }
 
@@ -77,22 +97,18 @@ struct CategoryFormView: View {
 
     private func iconButton(_ value: String) -> some View {
         Button { icon = value } label: {
-            Image(systemName: value)
-                .font(.title3)
-                .frame(width: 44, height: 44)
-                .background(
-                    icon == value ? AppTheme.teal : AppTheme.surface,
-                    in: RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                )
-                .foregroundStyle(icon == value ? .white : .primary)
-                .overlay {
-                    RoundedRectangle(cornerRadius: AppRadius.medium, style: .continuous)
-                        .stroke(
-                            icon == value ? AppTheme.teal : AppTheme.separator,
-                            lineWidth: 0.5
-                        )
-                }
+            AppIconBadge(
+                icon: value,
+                color: icon == value ? .white : selectedColor,
+                size: 44,
+                backgroundColor: icon == value ? selectedColor : AppTheme.surface,
+                borderColor: icon == value ? selectedColor : AppTheme.separator,
+                borderWidth: 0.5,
+                iconScale: 0.46
+            )
         }
+        .accessibilityLabel(value)
+        .accessibilityAddTraits(icon == value ? .isSelected : [])
     }
 
     private func save() {
@@ -101,7 +117,8 @@ struct CategoryFormView: View {
                 id: category?.id,
                 name: trimmedName,
                 icon: icon,
-                type: type
+                type: type,
+                colorHex: selectedColor.hexRGB
             )
             if didSave { dismiss() }
         }

@@ -2,6 +2,9 @@ import Foundation
 
 @MainActor
 struct BudgetUseCases {
+    /// Spending ratio from which a budget is flagged as `.warning`.
+    static let warningThreshold = Decimal(8) / 10
+
     let budgets: any BudgetRepository
     let categories: any CategoryRepository
     let transactions: any TransactionRepository
@@ -20,7 +23,10 @@ struct BudgetUseCases {
         }
         guard let category = try await categories.getCategories().first(where: {
             $0.id == budget.categoryID
-        }), category.type == .expense else {
+        }) else {
+            throw DomainError.categoryNotFound
+        }
+        guard category.type == .expense else {
             throw DomainError.invalidTransactionType
         }
 
@@ -49,23 +55,20 @@ struct BudgetUseCases {
         calendar: Calendar = .current
     ) async throws -> [BudgetProgress] {
         let allCategories = try await categories.getCategories()
+        let categoriesByID = Dictionary(uniqueKeysWithValues: allCategories.map { ($0.id, $0) })
         let monthlyBudgets = try await budgets.getBudgets().filter {
             calendar.isDate($0.month, equalTo: month, toGranularity: .month)
         }
-        let monthlyExpenses = try await transactions.getTransactions().filter {
-            $0.type == .expense
-                && calendar.isDate($0.date, equalTo: month, toGranularity: .month)
-        }
+        let monthlyExpenses = try await transactions.getTransactions()
+            .ofType(.expense)
+            .inMonth(month, calendar: calendar)
+        let expensesByCategory = Dictionary(grouping: monthlyExpenses, by: \.categoryID)
 
         return monthlyBudgets.compactMap { budget in
-            guard let category = allCategories.first(where: {
-                $0.id == budget.categoryID
-            }) else {
+            guard let category = categoriesByID[budget.categoryID] else {
                 return nil
             }
-            let spent = monthlyExpenses
-                .filter { $0.categoryID == budget.categoryID }
-                .reduce(Decimal.zero) { $0 + $1.amount }
+            let spent = expensesByCategory[budget.categoryID]?.totalAmount ?? 0
             let ratio = budget.amount > 0 ? spent / budget.amount : 0
 
             return BudgetProgress(
@@ -80,7 +83,7 @@ struct BudgetUseCases {
 
     static func status(for ratio: Decimal) -> BudgetStatus {
         if ratio >= 1 { return .exceeded }
-        if ratio >= Decimal(string: "0.8")! { return .warning }
+        if ratio >= warningThreshold { return .warning }
         return .safe
     }
 }

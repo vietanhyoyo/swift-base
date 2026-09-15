@@ -13,9 +13,7 @@ struct AccountFormView: View {
         self.account = account
         _name = State(initialValue: account?.name ?? "")
         _amount = State(initialValue: account.map {
-            AppFormatters.vietnameseMoneyInput(
-                NSDecimalNumber(decimal: $0.initialBalance).stringValue
-            )
+            AppFormatters.vietnameseMoneyInput(from: $0.initialBalance)
         } ?? "")
     }
 
@@ -32,16 +30,7 @@ struct AccountFormView: View {
             .appFormStyle()
             .navigationTitle(account == nil ? "Tài khoản mới" : "Sửa tài khoản")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Huỷ") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Lưu") { save() }
-                        .fontWeight(.semibold)
-                        .disabled(trimmedName.isEmpty)
-                }
-            }
+            .formToolbar(isSaveDisabled: trimmedName.isEmpty, onSave: save)
         }
     }
 

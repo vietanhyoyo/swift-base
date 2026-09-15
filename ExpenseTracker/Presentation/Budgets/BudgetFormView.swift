@@ -16,9 +16,7 @@ struct BudgetFormView: View {
                 ?? viewModel.expenseCategories.first?.id
         )
         _amount = State(initialValue: progress.map {
-            AppFormatters.vietnameseMoneyInput(
-                NSDecimalNumber(decimal: $0.budget.amount).stringValue
-            )
+            AppFormatters.vietnameseMoneyInput(from: $0.budget.amount)
         } ?? "")
     }
 
@@ -40,16 +38,7 @@ struct BudgetFormView: View {
             .appFormStyle()
             .navigationTitle(progress == nil ? "Ngân sách mới" : "Sửa ngân sách")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Huỷ") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Lưu") { save() }
-                        .fontWeight(.semibold)
-                        .disabled(!canSave)
-                }
-            }
+            .formToolbar(isSaveDisabled: !canSave, onSave: save)
         }
     }
 

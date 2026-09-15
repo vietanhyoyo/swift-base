@@ -4,7 +4,6 @@ import Observation
 @MainActor
 @Observable
 final class DashboardViewModel {
-    var isLoading = false
     var errorMessage: String?
     var balance: Decimal = 0
     var summary = MonthlySummary(income: 0, expense: 0)
@@ -32,9 +31,7 @@ final class DashboardViewModel {
     }
 
     func load() async {
-        isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
 
         do {
             balance = try await accounts.totalBalance()
@@ -42,19 +39,14 @@ final class DashboardViewModel {
             categorySpending = try await statistics.expenseByCategory(for: selectedMonth)
             budgetProgress = try await budgets.progress(for: selectedMonth)
             recentTransactions = try await statistics.recent(limit: 5)
-            let allCategories = try await categoryUseCases.getAll()
-            categories = Dictionary(uniqueKeysWithValues: allCategories.map { ($0.id, $0) })
+            categories = try await categoryUseCases.getAll().keyedByID()
         } catch {
             errorMessage = error.userMessage
         }
     }
 
     func moveMonth(_ offset: Int) async {
-        selectedMonth = Calendar.current.date(
-            byAdding: .month,
-            value: offset,
-            to: selectedMonth
-        ) ?? selectedMonth
+        selectedMonth = selectedMonth.addingMonths(offset)
         await load()
     }
 }

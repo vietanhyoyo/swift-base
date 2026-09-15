@@ -8,7 +8,7 @@ struct BudgetsView: View {
     var body: some View {
         VStack(spacing: 0) {
             MonthSelector(
-                month: viewModel.month,
+                month: viewModel.selectedMonth,
                 previous: { Task { await viewModel.moveMonth(-1) } },
                 next: { Task { await viewModel.moveMonth(1) } }
             )

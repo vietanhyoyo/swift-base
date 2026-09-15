@@ -38,16 +38,7 @@ struct CategoryFormView: View {
             .appFormStyle()
             .navigationTitle(category == nil ? "Danh mục mới" : "Sửa danh mục")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Huỷ") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Lưu") { save() }
-                        .fontWeight(.semibold)
-                        .disabled(trimmedName.isEmpty)
-                }
-            }
+            .formToolbar(isSaveDisabled: trimmedName.isEmpty, onSave: save)
         }
     }
 

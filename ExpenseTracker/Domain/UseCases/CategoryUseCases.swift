@@ -12,13 +12,20 @@ struct CategoryUseCases {
     func save(_ category: ExpenseCategory, isEditing: Bool) async throws {
         let name = category.name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else {
-            throw DomainError.categoryNotFound
+            throw DomainError.invalidName
         }
 
+        let normalized = ExpenseCategory(
+            id: category.id,
+            name: name,
+            icon: category.icon,
+            type: category.type,
+            colorHex: category.colorHex
+        )
         if isEditing {
-            try await categories.updateCategory(category)
+            try await categories.updateCategory(normalized)
         } else {
-            try await categories.addCategory(category)
+            try await categories.addCategory(normalized)
         }
     }
 

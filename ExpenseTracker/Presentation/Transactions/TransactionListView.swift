@@ -13,21 +13,17 @@ struct TransactionListView: View {
     }
 
     var body: some View {
+        let sections = viewModel.daySections
+
         NavigationStack {
             Group {
                 if viewModel.isLoading && viewModel.transactions.isEmpty {
                     ProgressView("Đang tải giao dịch…")
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else if viewModel.filtered.isEmpty {
-                    EmptyStateView(
-                        icon: hasNoSearchOrFilters ? "tray" : "magnifyingglass",
-                        title: hasNoSearchOrFilters ? "Chưa có giao dịch" : "Không tìm thấy",
-                        message: viewModel.query.isEmpty && !viewModel.hasFilters
-                            ? "Nhấn nút + để ghi lại khoản thu chi đầu tiên."
-                            : "Thử thay đổi từ khoá hoặc bộ lọc."
-                    )
+                } else if sections.isEmpty {
+                    emptyState
                 } else {
-                    transactionList
+                    transactionList(sections)
                 }
             }
             .appScreenBackground()
@@ -66,12 +62,29 @@ struct TransactionListView: View {
         }
     }
 
-    private var transactionList: some View {
+    @ViewBuilder
+    private var emptyState: some View {
+        if viewModel.hasSearchOrFilters {
+            EmptyStateView(
+                icon: "magnifyingglass",
+                title: "Không tìm thấy",
+                message: "Thử thay đổi từ khoá hoặc bộ lọc."
+            )
+        } else {
+            EmptyStateView(
+                icon: "tray",
+                title: "Chưa có giao dịch",
+                message: "Nhấn nút + để ghi lại khoản thu chi đầu tiên."
+            )
+        }
+    }
+
+    private func transactionList(_ sections: [TransactionDayGroup]) -> some View {
         List {
-            ForEach(groupedDays, id: \.0) { day, items in
+            ForEach(sections) { section in
                 TransactionDaySection(
-                    day: day,
-                    transactions: items,
+                    day: section.day,
+                    transactions: section.transactions,
                     categories: viewModel.categories,
                     accounts: viewModel.accounts,
                     onEdit: { editingTransaction = $0 },
@@ -84,18 +97,6 @@ struct TransactionListView: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(AppTheme.background)
-    }
-
-    private var groupedDays: [(Date, [ExpenseTransaction])] {
-        Dictionary(grouping: viewModel.filtered) {
-            Calendar.current.startOfDay(for: $0.date)
-        }
-        .sorted { $0.key > $1.key }
-        .map { ($0.key, $0.value) }
-    }
-
-    private var hasNoSearchOrFilters: Bool {
-        viewModel.query.isEmpty && !viewModel.hasFilters
     }
 
     private var filterIcon: String {

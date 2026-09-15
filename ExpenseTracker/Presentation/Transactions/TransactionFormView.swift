@@ -10,14 +10,14 @@ struct TransactionFormView: View {
             Form {
                 Section {
                     TransactionTypePicker(selection: $viewModel.type)
-                    .onChange(of: viewModel.type) { _, _ in
-                        viewModel.typeChanged()
-                    }
-                    .padding(.horizontal, AppSpacing.xxxSmall)
+                        .onChange(of: viewModel.type) { _, _ in
+                            viewModel.typeChanged()
+                        }
+                        .padding(.horizontal, AppSpacing.xxxSmall)
 
                     AmountTextField(
                         text: $viewModel.amountText,
-                        accentColor: viewModel.type == .income ? AppTheme.teal : AppTheme.coral
+                        accentColor: viewModel.type.color
                     )
                 }
                 .listRowInsets(EdgeInsets(
@@ -53,23 +53,16 @@ struct TransactionFormView: View {
             .appFormStyle()
             .navigationTitle(viewModel.isEditing ? "Sửa giao dịch" : "Thêm giao dịch")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Huỷ") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Lưu") {
-                        Task {
-                            if await viewModel.save() { dismiss() }
-                        }
-                    }
-                    .fontWeight(.semibold)
-                    .disabled(!viewModel.canSave)
-                }
-            }
+            .formToolbar(isSaveDisabled: !viewModel.canSave, onSave: save)
             .task { await viewModel.load() }
         }
         .tint(AppTheme.teal)
+    }
+
+    private func save() {
+        Task {
+            if await viewModel.save() { dismiss() }
+        }
     }
 }
 
@@ -95,7 +88,7 @@ private struct TransactionTypePicker: View {
 
     private func typeButton(for type: TransactionType, icon: String) -> some View {
         let isSelected = selection == type
-        let color = type == .income ? AppTheme.teal : AppTheme.coral
+        let color = type.color
 
         return Button {
             withAnimation(.easeInOut(duration: 0.2)) {

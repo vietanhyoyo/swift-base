@@ -49,11 +49,27 @@ final class TransactionListViewModel {
         }
     }
 
+    /// Filtered transactions grouped by day. Days follow the date direction of
+    /// `sort`; transactions inside a day keep the order produced by `filtered`.
+    var daySections: [TransactionDayGroup] {
+        let calendar = Calendar.current
+        let groups = Dictionary(grouping: filtered) { calendar.startOfDay(for: $0.date) }
+            .map { TransactionDayGroup(day: $0.key, transactions: $0.value) }
+
+        return sort == .oldest
+            ? groups.sorted { $0.day < $1.day }
+            : groups.sorted { $0.day > $1.day }
+    }
+
     var hasFilters: Bool {
         selectedType != nil
             || selectedCategoryID != nil
             || selectedAccountID != nil
             || sort != .newest
+    }
+
+    var hasSearchOrFilters: Bool {
+        !query.isEmpty || hasFilters
     }
 
     func load() async {
@@ -63,10 +79,8 @@ final class TransactionListViewModel {
 
         do {
             transactions = try await useCases.getAll()
-            let allCategories = try await categoryUseCases.getAll()
-            categories = Dictionary(uniqueKeysWithValues: allCategories.map { ($0.id, $0) })
-            let allAccounts = try await accountUseCases.getAll()
-            accounts = Dictionary(uniqueKeysWithValues: allAccounts.map { ($0.id, $0) })
+            categories = try await categoryUseCases.getAll().keyedByID()
+            accounts = try await accountUseCases.getAll().keyedByID()
         } catch {
             errorMessage = error.userMessage
         }

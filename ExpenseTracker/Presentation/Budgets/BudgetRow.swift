@@ -4,11 +4,7 @@ struct BudgetRow: View {
     let progress: BudgetProgress
 
     private var color: Color {
-        switch progress.status {
-        case .safe: AppTheme.teal
-        case .warning: AppTheme.gold
-        case .exceeded: AppTheme.coral
-        }
+        progress.status.color
     }
 
     var body: some View {
@@ -18,14 +14,14 @@ struct BudgetRow: View {
                 Text(progress.category.name)
                     .font(AppTypography.bodyEmphasis)
                 Spacer()
-                Text("\(percentage)%")
+                Text("\(progress.percentage)%")
                     .font(AppTypography.captionEmphasis)
                     .foregroundStyle(color)
                     .padding(.horizontal, AppSpacing.xSmall)
                     .padding(.vertical, AppSpacing.xxxSmall)
                     .background(color.opacity(0.11), in: Capsule())
             }
-            ProgressView(value: min(progress.ratio.doubleValue, 1))
+            ProgressView(value: progress.progressValue)
                 .tint(color)
             HStack {
                 Text("Đã dùng \(AppFormatters.money(progress.spent))")
@@ -36,9 +32,5 @@ struct BudgetRow: View {
             .foregroundStyle(.secondary)
         }
         .padding(.vertical, AppSpacing.xxxSmall)
-    }
-
-    private var percentage: Int {
-        Int(progress.ratio.doubleValue * 100)
     }
 }

@@ -45,6 +45,10 @@ enum AppFormatters {
         return Decimal(string: normalized, locale: Locale(identifier: "en_US_POSIX"))
     }
 
+    static func vietnameseMoneyInput(from value: Decimal) -> String {
+        vietnameseMoneyInput(NSDecimalNumber(decimal: value).stringValue)
+    }
+
     static func vietnameseMoneyInput(_ text: String) -> String {
         let digits = text.compactMap(\.wholeNumberValue).map(String.init).joined()
         guard !digits.isEmpty else { return "" }

@@ -17,10 +17,7 @@ final class AccountsViewModel {
     func load() async {
         do {
             accounts = try await useCases.getAll()
-            balances = [:]
-            for account in accounts {
-                balances[account.id] = try await useCases.balance(for: account)
-            }
+            balances = try await useCases.balances()
         } catch {
             errorMessage = error.userMessage
         }

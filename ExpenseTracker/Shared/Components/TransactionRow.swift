@@ -6,7 +6,7 @@ struct TransactionRow: View {
     let account: Account?
 
     private var amountColor: Color {
-        transaction.type == .income ? AppTheme.teal : AppTheme.coral
+        transaction.type.color
     }
 
     private var iconColor: Color {

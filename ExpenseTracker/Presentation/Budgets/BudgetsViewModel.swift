@@ -4,7 +4,7 @@ import Observation
 @MainActor
 @Observable
 final class BudgetsViewModel {
-    var month = Date()
+    var selectedMonth = Date()
     var progress: [BudgetProgress] = []
     var expenseCategories: [ExpenseCategory] = []
     var errorMessage: String?
@@ -22,18 +22,14 @@ final class BudgetsViewModel {
             expenseCategories = try await categories.getAll().filter {
                 $0.type == .expense
             }
-            progress = try await budgets.progress(for: month)
+            progress = try await budgets.progress(for: selectedMonth)
         } catch {
             errorMessage = error.userMessage
         }
     }
 
-    func moveMonth(_ value: Int) async {
-        month = Calendar.current.date(
-            byAdding: .month,
-            value: value,
-            to: month
-        ) ?? month
+    func moveMonth(_ offset: Int) async {
+        selectedMonth = selectedMonth.addingMonths(offset)
         await load()
     }
 
@@ -42,7 +38,7 @@ final class BudgetsViewModel {
             id: id ?? UUID(),
             categoryID: categoryID,
             amount: amount,
-            month: month
+            month: selectedMonth
         )
 
         do {

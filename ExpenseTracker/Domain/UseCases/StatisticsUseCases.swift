@@ -9,9 +9,7 @@ struct StatisticsUseCases {
         for month: Date,
         calendar: Calendar = .current
     ) async throws -> MonthlySummary {
-        let transactionsInMonth = try await transactions.getTransactions().filter {
-            calendar.isDate($0.date, equalTo: month, toGranularity: .month)
-        }
+        let transactionsInMonth = try await transactions(in: month, calendar: calendar)
         return Self.summary(from: transactionsInMonth)
     }
 
@@ -20,53 +18,23 @@ struct StatisticsUseCases {
         calendar: Calendar = .current
     ) async throws -> [CategorySpending] {
         let allCategories = try await categories.getCategories()
-        let expenses = try await transactions.getTransactions().filter {
-            $0.type == .expense
-                && calendar.isDate($0.date, equalTo: month, toGranularity: .month)
-        }
-
-        return allCategories
-            .filter { $0.type == .expense }
-            .compactMap { category in
-                let amount = expenses
-                    .filter { $0.categoryID == category.id }
-                    .reduce(Decimal.zero) { $0 + $1.amount }
-                return amount > 0
-                    ? CategorySpending(category: category, amount: amount)
-                    : nil
-            }
-            .sorted { $0.amount > $1.amount }
+        let expenses = try await transactions(in: month, calendar: calendar).ofType(.expense)
+        return Self.expenseByCategory(from: expenses, categories: allCategories)
     }
 
     func dailyExpense(
         for month: Date,
         calendar: Calendar = .current
     ) async throws -> [DailySpending] {
-        let expenses = try await transactions.getTransactions().filter {
-            $0.type == .expense
-                && calendar.isDate($0.date, equalTo: month, toGranularity: .month)
-        }
-        let expensesByDay = Dictionary(grouping: expenses) {
-            calendar.startOfDay(for: $0.date)
-        }
-
-        return expensesByDay
-            .map { day, transactions in
-                DailySpending(
-                    date: day,
-                    amount: transactions.reduce(Decimal.zero) { $0 + $1.amount }
-                )
-            }
-            .sorted { $0.date < $1.date }
+        let cashFlow = try await dailyCashFlow(for: month, calendar: calendar)
+        return Self.dailyExpense(from: cashFlow)
     }
 
     func dailyCashFlow(
         for month: Date,
         calendar: Calendar = .current
     ) async throws -> [DailyCashFlow] {
-        let transactionsInMonth = try await transactions.getTransactions().filter {
-            calendar.isDate($0.date, equalTo: month, toGranularity: .month)
-        }
+        let transactionsInMonth = try await transactions(in: month, calendar: calendar)
         return Self.dailyCashFlow(from: transactionsInMonth, calendar: calendar)
     }
 
@@ -78,13 +46,27 @@ struct StatisticsUseCases {
     }
 
     static func summary(from transactions: [ExpenseTransaction]) -> MonthlySummary {
-        let income = transactions
-            .filter { $0.type == .income }
-            .reduce(Decimal.zero) { $0 + $1.amount }
-        let expense = transactions
+        MonthlySummary(
+            income: transactions.ofType(.income).totalAmount,
+            expense: transactions.ofType(.expense).totalAmount
+        )
+    }
+
+    static func expenseByCategory(
+        from expenses: [ExpenseTransaction],
+        categories: [ExpenseCategory]
+    ) -> [CategorySpending] {
+        let expensesByCategory = Dictionary(grouping: expenses, by: \.categoryID)
+
+        return categories
             .filter { $0.type == .expense }
-            .reduce(Decimal.zero) { $0 + $1.amount }
-        return MonthlySummary(income: income, expense: expense)
+            .compactMap { category in
+                let amount = expensesByCategory[category.id]?.totalAmount ?? 0
+                return amount > 0
+                    ? CategorySpending(category: category, amount: amount)
+                    : nil
+            }
+            .sorted { $0.amount > $1.amount }
     }
 
     static func dailyCashFlow(
@@ -103,5 +85,18 @@ struct StatisticsUseCases {
             )
         }
         .sorted { $0.date < $1.date }
+    }
+
+    static func dailyExpense(from cashFlow: [DailyCashFlow]) -> [DailySpending] {
+        cashFlow
+            .filter { $0.expense > 0 }
+            .map { DailySpending(date: $0.date, amount: $0.expense) }
+    }
+
+    private func transactions(
+        in month: Date,
+        calendar: Calendar
+    ) async throws -> [ExpenseTransaction] {
+        try await transactions.getTransactions().inMonth(month, calendar: calendar)
     }
 }

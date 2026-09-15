@@ -21,11 +21,7 @@ private struct BudgetProgressRow: View {
     let progress: BudgetProgress
 
     private var color: Color {
-        switch progress.status {
-        case .safe: AppTheme.teal
-        case .warning: AppTheme.gold
-        case .exceeded: AppTheme.coral
-        }
+        progress.status.color
     }
 
     var body: some View {
@@ -39,14 +35,14 @@ private struct BudgetProgressRow: View {
                 Text(progress.category.name)
                     .font(AppTypography.cardTitle)
                 Spacer()
-                Text("\(Int(progress.ratio.doubleValue * 100))%")
+                Text("\(progress.percentage)%")
                     .font(AppTypography.captionEmphasis)
                     .foregroundStyle(color)
                     .padding(.horizontal, AppSpacing.xSmall)
                     .padding(.vertical, AppSpacing.xxxSmall)
                     .background(color.opacity(0.11), in: Capsule())
             }
-            ProgressView(value: min(progress.ratio.doubleValue, 1))
+            ProgressView(value: progress.progressValue)
                 .tint(color)
         }
     }

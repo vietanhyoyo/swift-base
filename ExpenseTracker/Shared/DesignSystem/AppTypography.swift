@@ -2,7 +2,6 @@ import SwiftUI
 
 enum AppTypography {
     static let heroAmount = Font.system(size: 34, weight: .bold, design: .rounded)
-    static let amountInput = Font.system(size: 36, weight: .bold, design: .rounded)
     static let sectionTitle = Font.system(.headline, design: .rounded).weight(.semibold)
     static let cardTitle = Font.system(.subheadline, design: .rounded).weight(.semibold)
     static let body = Font.system(.body, design: .rounded)

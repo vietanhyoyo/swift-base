@@ -6,16 +6,16 @@ struct StatisticsSummaryView: View {
     var body: some View {
         HStack(spacing: AppSpacing.small) {
             AppMetricCard(
-                title: "Thu nhập",
+                title: TransactionType.income.title,
                 value: AppFormatters.money(summary.income),
                 icon: "arrow.down.left",
-                color: AppTheme.teal
+                color: TransactionType.income.color
             )
             AppMetricCard(
-                title: "Chi tiêu",
+                title: TransactionType.expense.title,
                 value: AppFormatters.money(summary.expense),
                 icon: "arrow.up.right",
-                color: AppTheme.coral
+                color: TransactionType.expense.color
             )
         }
     }

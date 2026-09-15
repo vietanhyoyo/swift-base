@@ -10,14 +10,23 @@ struct AccountUseCases {
     }
 
     func save(_ account: Account, isEditing: Bool) async throws {
+        let name = account.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else {
+            throw DomainError.invalidName
+        }
         guard account.initialBalance >= 0 else {
             throw DomainError.invalidAmount
         }
 
+        let normalized = Account(
+            id: account.id,
+            name: name,
+            initialBalance: account.initialBalance
+        )
         if isEditing {
-            try await accounts.updateAccount(account)
+            try await accounts.updateAccount(normalized)
         } else {
-            try await accounts.addAccount(account)
+            try await accounts.addAccount(normalized)
         }
     }
 
@@ -31,30 +40,35 @@ struct AccountUseCases {
         try await accounts.deleteAccount(id: id)
     }
 
-    func balance(for account: Account) async throws -> Decimal {
+    /// Current balance of every account, keyed by account ID.
+    /// Transactions are fetched once regardless of the number of accounts.
+    func balances() async throws -> [UUID: Decimal] {
+        let allAccounts = try await accounts.getAccounts()
         let allTransactions = try await transactions.getTransactions()
-        return Self.calculateBalance(account: account, transactions: allTransactions)
+        let transactionsByAccount = Dictionary(grouping: allTransactions, by: \.accountID)
+
+        return Dictionary(uniqueKeysWithValues: allAccounts.map { account in
+            (
+                account.id,
+                Self.calculateBalance(
+                    account: account,
+                    transactions: transactionsByAccount[account.id] ?? []
+                )
+            )
+        })
     }
 
     func totalBalance() async throws -> Decimal {
-        let allAccounts = try await accounts.getAccounts()
-        let allTransactions = try await transactions.getTransactions()
-
-        return allAccounts.reduce(0) { result, account in
-            result + Self.calculateBalance(account: account, transactions: allTransactions)
-        }
+        try await balances().values.reduce(0, +)
     }
 
     static func calculateBalance(
         account: Account,
         transactions: [ExpenseTransaction]
     ) -> Decimal {
-        transactions
-            .filter { $0.accountID == account.id }
-            .reduce(account.initialBalance) { result, transaction in
-                transaction.type == .income
-                    ? result + transaction.amount
-                    : result - transaction.amount
-            }
+        let ownTransactions = transactions.filter { $0.accountID == account.id }
+        return account.initialBalance
+            + ownTransactions.ofType(.income).totalAmount
+            - ownTransactions.ofType(.expense).totalAmount
     }
 }

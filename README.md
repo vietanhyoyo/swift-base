@@ -25,6 +25,11 @@ Hướng phụ thuộc là `Presentation → Domain ← Data`. `AppContainer` l�
 
 Khi thêm feature mới, ưu tiên tạo một thư mục riêng trong `Presentation`, một file cho mỗi View/ViewModel/component có trách nhiệm rõ ràng, và thêm nghiệp vụ vào `Domain` trước khi hiện thực lưu trữ ở `Data`.
 
+Tài liệu chi tiết:
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — kiến trúc, luồng dữ liệu, đánh đổi đã biết.
+- [docs/CODING_CHECKLIST.md](docs/CODING_CHECKLIST.md) — checklist khi code và review.
+
 ## Chức năng
 
 - Dashboard: tổng số dư, thu/chi tháng, danh mục, ngân sách và giao dịch gần đây.

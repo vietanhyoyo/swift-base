@@ -9,7 +9,6 @@ final class StatisticsViewModel {
     var categorySpending: [CategorySpending] = []
     var dailySpending: [DailySpending] = []
     var dailyCashFlow: [DailyCashFlow] = []
-    var isLoading = false
     var errorMessage: String?
 
     private let statistics: StatisticsUseCases
@@ -19,26 +18,20 @@ final class StatisticsViewModel {
     }
 
     func load() async {
-        isLoading = true
         errorMessage = nil
-        defer { isLoading = false }
 
         do {
             summary = try await statistics.monthlySummary(for: selectedMonth)
             dailyCashFlow = try await statistics.dailyCashFlow(for: selectedMonth)
             categorySpending = try await statistics.expenseByCategory(for: selectedMonth)
-            dailySpending = try await statistics.dailyExpense(for: selectedMonth)
+            dailySpending = StatisticsUseCases.dailyExpense(from: dailyCashFlow)
         } catch {
             errorMessage = error.userMessage
         }
     }
 
-    func moveMonth(_ value: Int) async {
-        selectedMonth = Calendar.current.date(
-            byAdding: .month,
-            value: value,
-            to: selectedMonth
-        ) ?? selectedMonth
+    func moveMonth(_ offset: Int) async {
+        selectedMonth = selectedMonth.addingMonths(offset)
         await load()
     }
 }

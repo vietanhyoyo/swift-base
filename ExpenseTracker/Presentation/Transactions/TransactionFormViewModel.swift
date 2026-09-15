@@ -35,9 +35,7 @@ final class TransactionFormViewModel {
         categoryID = existing?.categoryID
         accountID = existing?.accountID
         if let amount = existing?.amount {
-            amountText = AppFormatters.vietnameseMoneyInput(
-                NSDecimalNumber(decimal: amount).stringValue
-            )
+            amountText = AppFormatters.vietnameseMoneyInput(from: amount)
         }
         self.transactions = transactions
         categoryUseCases = categories
@@ -49,7 +47,7 @@ final class TransactionFormViewModel {
     }
 
     var canSave: Bool {
-        (AppFormatters.decimal(from: amountText) ?? 0) > 0
+        (parsedAmount ?? 0) > 0
             && categoryID != nil
             && accountID != nil
             && !isSaving
@@ -88,6 +86,10 @@ final class TransactionFormViewModel {
         }
     }
 
+    private var parsedAmount: Decimal? {
+        AppFormatters.decimal(from: amountText)
+    }
+
     private func selectValidDefaults() {
         if !availableCategories.contains(where: { $0.id == categoryID }) {
             categoryID = availableCategories.first?.id
@@ -98,11 +100,7 @@ final class TransactionFormViewModel {
     }
 
     private func makeTransaction() -> ExpenseTransaction? {
-        guard
-            let amount = AppFormatters.decimal(from: amountText),
-            let categoryID,
-            let accountID
-        else {
+        guard let amount = parsedAmount, let categoryID, let accountID else {
             return nil
         }
 
@@ -112,7 +110,7 @@ final class TransactionFormViewModel {
             amount: amount,
             type: type,
             date: date,
-            note: trimmedNote.isEmpty ? nil : note,
+            note: trimmedNote.isEmpty ? nil : trimmedNote,
             categoryID: categoryID,
             accountID: accountID
         )

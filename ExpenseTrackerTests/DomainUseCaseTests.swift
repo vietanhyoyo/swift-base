@@ -100,6 +100,87 @@ final class DomainUseCaseTests: XCTestCase {
         }
     }
 
+    func testAccountBalancesAreKeyedByAccount() async throws {
+        let wallet = Account(id: UUID(), name: "Ví", initialBalance: 100_000)
+        let bank = Account(id: UUID(), name: "Ngân hàng", initialBalance: 0)
+        let transactions = MockTransactionRepository()
+        transactions.items = [
+            ExpenseTransaction(id: UUID(), amount: 40_000, type: .expense, date: Date(), note: nil, categoryID: UUID(), accountID: wallet.id),
+            ExpenseTransaction(id: UUID(), amount: 500_000, type: .income, date: Date(), note: nil, categoryID: UUID(), accountID: bank.id)
+        ]
+        let useCases = AccountUseCases(accounts: MockAccountRepository(items: [wallet, bank]), transactions: transactions)
+
+        let balances = try await useCases.balances()
+        let total = try await useCases.totalBalance()
+
+        XCTAssertEqual(balances, [wallet.id: 60_000, bank.id: 500_000])
+        XCTAssertEqual(total, 560_000)
+    }
+
+    func testSaveCategoryRejectsBlankNameAndTrimsName() async throws {
+        let repository = MockCategoryRepository()
+        let useCases = CategoryUseCases(categories: repository, transactions: MockTransactionRepository())
+
+        do {
+            try await useCases.save(ExpenseCategory(id: UUID(), name: "   ", icon: "star", type: .expense), isEditing: false)
+            XCTFail("Expected invalidName")
+        } catch {
+            XCTAssertEqual(error as? DomainError, .invalidName)
+        }
+
+        try await useCases.save(ExpenseCategory(id: UUID(), name: "  Du lịch ", icon: "airplane", type: .expense), isEditing: false)
+        XCTAssertEqual(repository.items.map(\.name), ["Du lịch"])
+    }
+
+    func testSaveBudgetRejectsUnknownCategory() async {
+        let useCases = BudgetUseCases(
+            budgets: MockBudgetRepository(),
+            categories: MockCategoryRepository(),
+            transactions: MockTransactionRepository()
+        )
+        let budget = Budget(id: UUID(), categoryID: UUID(), amount: 1_000_000, month: Date())
+
+        do {
+            try await useCases.save(budget, isEditing: false)
+            XCTFail("Expected categoryNotFound")
+        } catch {
+            XCTAssertEqual(error as? DomainError, .categoryNotFound)
+        }
+    }
+
+    func testExpenseByCategoryGroupsAndSortsDescending() {
+        let food = ExpenseCategory(id: UUID(), name: "Ăn uống", icon: "fork.knife", type: .expense)
+        let transport = ExpenseCategory(id: UUID(), name: "Di chuyển", icon: "car.fill", type: .expense)
+        let salary = ExpenseCategory(id: UUID(), name: "Lương", icon: "banknote.fill", type: .income)
+        let expenses = [
+            ExpenseTransaction(id: UUID(), amount: 50_000, type: .expense, date: Date(), note: nil, categoryID: food.id, accountID: UUID()),
+            ExpenseTransaction(id: UUID(), amount: 30_000, type: .expense, date: Date(), note: nil, categoryID: food.id, accountID: UUID()),
+            ExpenseTransaction(id: UUID(), amount: 120_000, type: .expense, date: Date(), note: nil, categoryID: transport.id, accountID: UUID())
+        ]
+
+        XCTAssertEqual(
+            StatisticsUseCases.expenseByCategory(from: expenses, categories: [food, transport, salary]),
+            [
+                CategorySpending(category: transport, amount: 120_000),
+                CategorySpending(category: food, amount: 80_000)
+            ]
+        )
+    }
+
+    func testDailyExpenseSkipsDaysWithoutExpense() {
+        let day = Date(timeIntervalSince1970: 0)
+        let nextDay = day.addingTimeInterval(86_400)
+        let cashFlow = [
+            DailyCashFlow(date: day, income: 1_000, expense: 0),
+            DailyCashFlow(date: nextDay, income: 0, expense: 2_000)
+        ]
+
+        XCTAssertEqual(
+            StatisticsUseCases.dailyExpense(from: cashFlow),
+            [DailySpending(date: nextDay, amount: 2_000)]
+        )
+    }
+
     private func transaction(
         amount: Decimal,
         type: TransactionType,
@@ -107,6 +188,15 @@ final class DomainUseCaseTests: XCTestCase {
     ) -> ExpenseTransaction {
         ExpenseTransaction(id: UUID(), amount: amount, type: type, date: date, note: nil, categoryID: UUID(), accountID: UUID())
     }
+}
+
+@MainActor
+private final class MockBudgetRepository: BudgetRepository {
+    var items: [Budget] = []
+    func getBudgets() async throws -> [Budget] { items }
+    func addBudget(_ budget: Budget) async throws { items.append(budget) }
+    func updateBudget(_ budget: Budget) async throws { if let index = items.firstIndex(where: { $0.id == budget.id }) { items[index] = budget } }
+    func deleteBudget(id: UUID) async throws { items.removeAll { $0.id == id } }
 }
 
 @MainActor
